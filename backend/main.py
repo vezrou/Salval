@@ -14,7 +14,11 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://salval-bob.vercel.app",
+        "http://localhost:5173",   # Vite dev server
+        "http://localhost:4173",   # Vite preview
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
