@@ -12,7 +12,7 @@ import os
 from google import genai
 from google.genai import types
 
-_MODEL_ID = "gemini-2.5-flash"
+_MODEL_ID = "gemini-2.5-flash-preview-05-20"
 
 
 def generate(system_prompt: str, user_message: str, history: list[dict] | None = None) -> str:
