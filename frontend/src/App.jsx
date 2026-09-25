@@ -21,7 +21,7 @@ function HeroSection() {
           An AI development assistant that analyzes your codebase before it
           helps you continue building.
         </p>
-        <a className="hero-cta" href="/chat">
+        <a className="hero-cta" href="#chat">
           MEET SALVAL <ArrowRight size={14} />
         </a>
       </Reveal>
@@ -79,7 +79,7 @@ function ClosingSection() {
           specialized AI agents, and helps you move development forward with
           context.
         </p>
-        <a className="demo-link" href="/chat">
+        <a className="demo-link" href="#chat">
           TRY THE DEMO <ArrowRight size={14} />
         </a>
       </Reveal>
@@ -99,7 +99,7 @@ function App() {
 
       <a
         className="floating-bot"
-        href="/chat"
+        href="#chat"
         aria-label="Open SALVAL chat"
       >
         <Bot size={21} />
