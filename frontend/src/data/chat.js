@@ -3,9 +3,11 @@ export const AGENTS = [
   { id: 'debug', name: 'Salma', role: 'Debugger Agent' },
   { id: 'ui', name: 'Valerie', role: 'UI/UX Agent' },
   { id: 'code', name: 'Leo', role: 'Code Agent' },
+  { id: 'architect', name: 'Aria', role: 'Architect Agent' },
 ];
 
 export const STARTER_PROMPTS = [
+  'Help me structure a new project',
   'Help me understand this project',
   'I am stuck on an error',
   'Take a look at this interface',

@@ -9,14 +9,19 @@ by load_dotenv() in main.py):
 """
 
 import os
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
-_MODEL_ID = "gemini-3.8-flash"
+_MODEL_ID = "gemini-2.0-flash"
 
 
-def generate(system_prompt: str, user_message: str) -> str:
+def generate(system_prompt: str, user_message: str, history: list[dict] | None = None) -> str:
     """
-    Call Gemini with a system prompt + user message and return the reply.
+    Call Gemini with a system prompt, optional prior conversation history,
+    and the latest user message. Returns the model's reply as plain text.
+
+    history entries must follow the shape:
+        {"role": "user" | "model", "parts": [{"text": "..."}]}
     """
     api_key = os.environ.get("GEMINI_API_KEY", "")
     if not api_key:
@@ -24,11 +29,26 @@ def generate(system_prompt: str, user_message: str) -> str:
             "GEMINI_API_KEY must be set before calling the subagents."
         )
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(
-        model_name=_MODEL_ID,
-        system_instruction=system_prompt,
+    client = genai.Client(api_key=api_key)
+
+    # Convert history to the SDK's Content objects
+    gemini_history = [
+        types.Content(
+            role=entry["role"],
+            parts=[types.Part(text=p["text"]) for p in entry["parts"]],
+        )
+        for entry in (history or [])
+    ]
+
+    # Build the full contents list: history + new user turn
+    contents = gemini_history + [
+        types.Content(role="user", parts=[types.Part(text=user_message)])
+    ]
+
+    response = client.models.generate_content(
+        model=_MODEL_ID,
+        contents=contents,
+        config=types.GenerateContentConfig(system_instruction=system_prompt),
     )
 
-    response = model.generate_content(user_message)
     return response.text.strip()

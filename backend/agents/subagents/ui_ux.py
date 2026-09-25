@@ -17,8 +17,8 @@ Use plain language that a developer can act on immediately.\
 """
 
 
-def run(command: str, code: str) -> str:
+def run(command: str, code: str = "", history: list[dict] | None = None) -> str:
     user_message = command
     if code.strip():
         user_message += f"\n\n```\n{code}\n```"
-    return generate(_SYSTEM_PROMPT, user_message)
+    return generate(_SYSTEM_PROMPT, user_message, history or [])

@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { getAgent } from '../data/chat.js';
-
-const INITIAL_AGENT = null;
 
 export default function useChat() {
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState('');
-  const [activeAgent, setActiveAgent] = useState(INITIAL_AGENT);
+  const [activeAgent, setActiveAgent] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState('');
+
+  // Persists the session_id returned by the backend so every follow-up
+  // message in this conversation is sent with the same id.
+  const sessionIdRef = useRef('');
 
   async function sendMessage(event) {
     event.preventDefault();
@@ -33,12 +35,16 @@ export default function useChat() {
     setIsSending(true);
 
     try {
-      const response = await fetch('/build', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/build`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ command: content, code: '' }),
+        body: JSON.stringify({
+          command: content,
+          code: '',
+          session_id: sessionIdRef.current,
+        }),
       });
 
       if (!response.ok) {
@@ -46,6 +52,12 @@ export default function useChat() {
       }
 
       const data = await response.json();
+
+      // Store the session_id returned by the server for subsequent messages
+      if (data.session_id) {
+        sessionIdRef.current = data.session_id;
+      }
+
       const agent = getAgent(data.routed_to);
       const assistantMessage = {
         id: `${id}-assistant`,
