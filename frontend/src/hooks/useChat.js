@@ -35,17 +35,20 @@ export default function useChat() {
     setIsSending(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/build`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          command: content,
-          code: '',
-          session_id: sessionIdRef.current,
-        }),
-      });
+      // Retry once — handles Render free-tier cold starts (50s spin-up)
+      let response;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        response = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/build`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            command: content,
+            code: '',
+            session_id: sessionIdRef.current,
+          }),
+        });
+        if (response.ok) break;
+      }
 
       if (!response.ok) {
         throw new Error('The chat request failed.');
@@ -69,7 +72,7 @@ export default function useChat() {
       setMessages((current) => [...current, assistantMessage]);
       setActiveAgent(agent.name);
     } catch {
-      setError('SALVAL could not connect. Check that the backend is running.');
+      setError('SALVAL is waking up — please send your message again in a few seconds.');
       setActiveAgent('SALVAL');
     } finally {
       setIsSending(false);
