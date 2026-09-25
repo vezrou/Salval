@@ -1,0 +1,13 @@
+:root {
+  --aqua: #9bc7d0;
+  --aqua-dark: #78aeb9;
+  --cream: #fbf9ed;
+  --page: #f2f6f5;
+  --paper: #fffdf6;
+  --heading: #526f70;
+  --text: #617a77;
+  --muted: #91a6a0;
+  --error: #b56b65;
+  --line: color-mix(in srgb, var(--heading) 19%, transparent);
+  --section-height: 100svh;
+}

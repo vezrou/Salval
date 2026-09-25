@@ -1,0 +1,251 @@
+.hero,
+.about,
+.process,
+.closing {
+  position: sticky;
+  top: 0;
+  min-height: var(--section-height);
+  isolation: isolate;
+}
+
+.hero,
+.closing {
+  display: grid;
+  padding: 56px 24px;
+  place-items: center;
+  text-align: center;
+}
+
+.hero {
+  z-index: 1;
+  overflow: hidden;
+  background: var(--cream);
+}
+
+.circuit-pattern {
+  position: absolute;
+  inset: 0;
+  background: url('/assets/circuit-background.png') repeat;
+  background-size: 304px;
+  opacity: 0.3;
+}
+
+.hero::after {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse,
+    rgb(251 249 237 / 42%),
+    rgb(251 249 237 / 6%)
+  );
+  content: '';
+  pointer-events: none;
+}
+
+.hero-content,
+.about-content,
+.closing-content {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-content {
+  width: min(650px, 88%);
+  padding-top: 16px;
+}
+
+.hero-bot {
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  margin-bottom: 8px;
+  color: var(--aqua-dark);
+  place-items: center;
+}
+
+.hero h1 {
+  margin: 0 0 13px;
+  color: var(--aqua);
+  font-size: var(--type-hero);
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  line-height: 0.95;
+}
+
+.hero-headline {
+  margin: 0 0 4px;
+  color: var(--aqua-dark);
+  font-size: var(--type-hero-headline);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.hero-description {
+  max-width: 560px;
+  margin: 12px auto 22px;
+  color: var(--aqua-dark);
+  font-size: var(--type-lead);
+  line-height: var(--line-body);
+}
+
+.hero-cta,
+.demo-link {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: gap 0.2s ease, color 0.2s ease;
+}
+
+.hero-cta {
+  gap: 9px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--aqua-dark);
+  font-size: var(--type-caption);
+  font-weight: 600;
+  letter-spacing: 0.045em;
+}
+
+.hero-cta:hover,
+.demo-link:hover {
+  gap: 12px;
+  color: var(--heading);
+}
+
+.about {
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  padding: 68px 14.5%;
+  background: var(--page);
+}
+
+.about-content {
+  width: 100%;
+  max-width: 680px;
+}
+
+.section-bot {
+  display: block;
+  width: fit-content;
+  margin-bottom: 20px;
+  color: var(--aqua);
+}
+
+.section-title {
+  margin: 0 0 13px;
+  color: var(--aqua-dark);
+  font-size: var(--type-title);
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  line-height: 1.15;
+}
+
+.section-copy {
+  color: var(--aqua-dark);
+  font-size: var(--type-lead);
+  line-height: var(--line-body);
+}
+
+.about-copy {
+  max-width: 650px;
+  margin: 0;
+}
+
+.closing {
+  z-index: 4;
+  background: var(--page);
+}
+
+.closing-content {
+  width: min(600px, 100%);
+}
+
+.closing .section-bot {
+  margin: 0 auto 18px;
+}
+
+.closing .section-title {
+  margin-bottom: 10px;
+}
+
+.closing-copy {
+  max-width: 570px;
+  margin: 0 auto 10px;
+}
+
+.demo-link {
+  gap: 7px;
+  padding: 7px 0;
+  color: var(--aqua-dark);
+  font-size: var(--type-caption);
+  font-weight: 700;
+}
+
+.floating-bot {
+  position: fixed;
+  right: 29px;
+  bottom: 25px;
+  z-index: 6;
+  display: grid;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  color: var(--paper);
+  background: var(--aqua);
+  box-shadow: 0 3px 10px rgb(103 163 168 / 19%);
+  cursor: pointer;
+  place-items: center;
+  text-decoration: none;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.floating-bot:hover {
+  background: var(--aqua-dark);
+  transform: translateY(-3px);
+}
+
+@media (max-width: 620px) {
+  .hero {
+    padding-inline: 22px;
+  }
+
+  .hero-headline {
+    max-width: 370px;
+    margin-inline: auto;
+  }
+
+  .hero-description {
+    max-width: 325px;
+    font-size: var(--type-caption);
+  }
+
+  .about {
+    padding: 61px 8.5%;
+  }
+
+  .about-copy,
+  .closing-copy {
+    font-size: var(--type-body);
+    line-height: 1.6;
+  }
+
+  .closing {
+    padding: 60px 28px;
+  }
+
+  .floating-bot {
+    right: 17px;
+    bottom: 17px;
+    width: 50px;
+    height: 50px;
+    border-radius: 17px;
+  }
+}
+

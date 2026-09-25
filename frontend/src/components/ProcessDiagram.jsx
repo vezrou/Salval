@@ -1,89 +1,77 @@
-const CODEBASE_TOPICS = [
-  'Architecture',
-  'Logic',
-  'Dependencies',
-  'Patterns',
+import Reveal from './Reveal.jsx';
+import '../styles/process-diagram.css';
+
+const DIAGRAM_COLUMNS = [
+  {
+    title: 'Understand the codebase',
+    steps: [
+      { label: 'Codebase' },
+      {
+        items: ['Architecture', 'Logic', 'Dependencies', 'Patterns'],
+      },
+      { label: 'Project Understanding', emphasis: true },
+      { label: 'Developer Guidance' },
+    ],
+  },
+  {
+    title: 'Build with the right agents',
+    steps: [
+      { label: 'Project Understanding' },
+      { label: 'Main Agent', emphasis: true },
+      {
+        items: ['API Agent', 'Logic Agent', 'Data Agent', 'Review Agent'],
+      },
+      { label: 'Next Development Step' },
+    ],
+  },
 ];
 
-const SPECIALIST_AGENTS = [
-  'API Agent',
-  'Logic Agent',
-  'Data Agent',
-  'Review Agent',
-];
+function Stage({ label, emphasis }) {
+  const className = emphasis ? 'simple-stage stage-emphasis' : 'simple-stage';
 
-function Arrow() {
-  return <span className="simple-arrow" aria-hidden="true" />;
+  return <div className={className}>{label}</div>;
 }
 
-function Stage({ children, emphasis = false }) {
-  const classNames = emphasis
-    ? 'simple-stage stage-emphasis'
-    : 'simple-stage';
-
-  return <div className={classNames}>{children}</div>;
-}
-
-function TopicList({ items }) {
+function Step({ step, isLast }) {
   return (
-    <div className="topic-list">
-      {items.map((item) => (
-        <span key={item}>{item}</span>
-      ))}
-    </div>
+    <>
+      {step.items ? (
+        <div className="topic-list">
+          {step.items.map((item) => (
+            <span key={item}>{item}</span>
+          ))}
+        </div>
+      ) : (
+        <Stage label={step.label} emphasis={step.emphasis} />
+      )}
+      {!isLast && <span className="simple-arrow" aria-hidden="true" />}
+    </>
   );
 }
 
-function DiagramColumn({ title, children, className }) {
+function DiagramColumn({ title, steps }) {
   return (
-    <article className={`diagram-column ${className}`}>
-      <header className="diagram-heading">
-        <h3>{title}</h3>
-      </header>
-      <div className="simple-flow">{children}</div>
+    <article className="diagram-column">
+      <h3 className="diagram-heading">{title}</h3>
+      <div className="simple-flow">
+        {steps.map((step, index) => (
+          <Step
+            key={step.label ?? step.items.join('-')}
+            step={step}
+            isLast={index === steps.length - 1}
+          />
+        ))}
+      </div>
     </article>
-  );
-}
-
-function CodebaseColumn() {
-  return (
-    <DiagramColumn
-      title="Understand the codebase"
-      className="understand-column"
-    >
-      <Stage>Codebase</Stage>
-      <Arrow />
-      <TopicList items={CODEBASE_TOPICS} />
-      <Arrow />
-      <Stage emphasis>Project Understanding</Stage>
-      <Arrow />
-      <Stage>Developer Guidance</Stage>
-    </DiagramColumn>
-  );
-}
-
-function AgentsColumn() {
-  return (
-    <DiagramColumn
-      title="Build with the right agents"
-      className="agents-column"
-    >
-      <Stage>Project Understanding</Stage>
-      <Arrow />
-      <Stage emphasis>Main Agent</Stage>
-      <Arrow />
-      <TopicList items={SPECIALIST_AGENTS} />
-      <Arrow />
-      <Stage>Next Development Step</Stage>
-    </DiagramColumn>
   );
 }
 
 export default function ProcessDiagram() {
   return (
-    <div className="simple-diagram reveal">
-      <CodebaseColumn />
-      <AgentsColumn />
-    </div>
+    <Reveal className="simple-diagram">
+      {DIAGRAM_COLUMNS.map((column) => (
+        <DiagramColumn key={column.title} {...column} />
+      ))}
+    </Reveal>
   );
 }

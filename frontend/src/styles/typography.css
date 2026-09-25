@@ -1,0 +1,24 @@
+:root {
+  --font-body: 'Inter', sans-serif;
+  --font-display: 'Pally', 'Trebuchet MS', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+
+  --type-tiny: 11px;
+  --type-small: 12px;
+  --type-caption: 14px;
+  --type-body: 16px;
+  --type-lead: 18px;
+  --type-brand: 24px;
+  --type-diagram-heading: 17px;
+  --type-chat-heading: 28px;
+  --type-chat-title: clamp(30px, 3vw, 34px);
+  --type-hero-headline: clamp(18px, 2.4vw, 23px);
+  --type-process-title: 28px;
+  --type-title: clamp(30px, 4vw, 40px);
+  --type-hero: clamp(44px, 6.2vw, 62px);
+  --line-body: 1.65;
+}
+
+h1, h2, h3, .hero-cta, .demo-link, .floating-bot {
+  font-family: var(--font-display);
+}

@@ -1,38 +1,15 @@
-import { useEffect } from 'react';
 import { ArrowRight, Bot } from 'lucide-react';
 import CircuitPattern from './components/CircuitPattern.jsx';
 import ProcessDiagram from './components/ProcessDiagram.jsx';
-import './styles.css';
-
-function useScrollReveal() {
-  useEffect(() => {
-    const revealElement = (element) => {
-      element.classList.add('is-visible');
-      observer.unobserve(element);
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          revealElement(entry.target);
-        }
-      });
-    }, { threshold: 0.12 });
-
-    document.querySelectorAll('.reveal').forEach((element) => {
-      observer.observe(element);
-    });
-
-    return () => observer.disconnect();
-  }, []);
-}
+import Reveal from './components/Reveal.jsx';
+import './styles/landing.css';
 
 function HeroSection() {
   return (
     <section className="hero" id="home">
       <CircuitPattern />
 
-      <div className="hero-content reveal">
+      <Reveal className="hero-content">
         <span className="hero-bot">
           <Bot size={17} />
         </span>
@@ -47,9 +24,7 @@ function HeroSection() {
         <a className="hero-cta" href="/chat">
           MEET SALVAL <ArrowRight size={14} />
         </a>
-      </div>
-
-      
+      </Reveal>
     </section>
   );
 }
@@ -57,12 +32,12 @@ function HeroSection() {
 function AboutSection() {
   return (
     <section className="about" id="about">
-      <div className="about-content reveal">
+      <Reveal className="about-content">
         <span className="section-bot">
           <Bot size={31} />
         </span>
-        <h2>WHAT IS SALVAL?</h2>
-        <p className="about-copy">
+        <h2 className="section-title">WHAT IS SALVAL?</h2>
+        <p className="about-copy section-copy">
           SALVAL is an AI-powered development companion designed to understand
           your codebase before helping you change it.
           <br />
@@ -71,7 +46,7 @@ function AboutSection() {
           AI agents to help you understand, decide, implement, review, and
           continue development with greater confidence.
         </p>
-      </div>
+      </Reveal>
     </section>
   );
 }
@@ -79,13 +54,13 @@ function AboutSection() {
 function ProcessSection() {
   return (
     <section className="process" id="process">
-      <div className="process-heading reveal">
-        <h2>From code to your next move.</h2>
+      <Reveal className="process-heading">
+        <h2 className="section-title">From code to your next move.</h2>
         <p>
           First, SALVAL understands what you have. Then it helps you decide what
           comes next.
         </p>
-      </div>
+      </Reveal>
       <ProcessDiagram />
     </section>
   );
@@ -94,12 +69,12 @@ function ProcessSection() {
 function ClosingSection() {
   return (
     <section className="closing">
-      <div className="closing-content reveal">
+      <Reveal className="closing-content">
         <span className="section-bot">
           <Bot size={31} />
         </span>
-        <h2>SEE SALVAL IN ACTION!</h2>
-        <p className="closing-copy">
+        <h2 className="section-title">SEE SALVAL IN ACTION!</h2>
+        <p className="closing-copy section-copy">
           Experience how SALVAL understands your codebase, coordinates
           specialized AI agents, and helps you move development forward with
           context.
@@ -107,14 +82,12 @@ function ClosingSection() {
         <a className="demo-link" href="/chat">
           TRY THE DEMO <ArrowRight size={14} />
         </a>
-      </div>
+      </Reveal>
     </section>
   );
 }
 
 function App() {
-  useScrollReveal();
-
   return (
     <>
       <main>
