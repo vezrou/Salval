@@ -14,7 +14,10 @@ from google import genai
 from google.genai import types
 from google.genai.errors import ServerError
 
-_MODEL_ID = "gemini-3.5-flash"
+_MODELS = [
+    "gemini-3.5-flash",
+    "gemini-2.5-flash-lite",   # fallback if primary is overloaded
+]
 _MAX_RETRIES = 3
 _RETRY_DELAY = 2  # seconds between retries on 503
 
@@ -49,24 +52,25 @@ def generate(system_prompt: str, user_message: str, history: list[dict] | None =
     ]
 
     last_error = None
-    for attempt in range(_MAX_RETRIES):
-        try:
-            response = client.models.generate_content(
-                model=_MODEL_ID,
-                contents=contents,
-                config=types.GenerateContentConfig(system_instruction=system_prompt),
-            )
-            return response.text.strip()
-        except ServerError as e:
-            last_error = e
-            # ServerError stores the HTTP code in .code, not .status_code
-            if getattr(e, 'code', None) == 503 and attempt < _MAX_RETRIES - 1:
-                time.sleep(_RETRY_DELAY * (attempt + 1))
-                continue
-            break
-        except Exception as e:
-            last_error = e
-            break
+    for model in _MODELS:
+        for attempt in range(_MAX_RETRIES):
+            try:
+                response = client.models.generate_content(
+                    model=model,
+                    contents=contents,
+                    config=types.GenerateContentConfig(system_instruction=system_prompt),
+                )
+                return response.text.strip()
+            except ServerError as e:
+                last_error = e
+                is_503 = getattr(e, 'code', None) == 503 or '503' in str(e)
+                if is_503 and attempt < _MAX_RETRIES - 1:
+                    time.sleep(_RETRY_DELAY * (attempt + 1))
+                    continue
+                break  # try next model
+            except Exception as e:
+                last_error = e
+                break
 
     raise RuntimeError(
         "Gemini is experiencing high demand right now. Please try again in a moment."
