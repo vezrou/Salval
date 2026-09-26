@@ -446,6 +446,15 @@
     width: calc(100% - 36px);
     height: auto;
     overflow: visible;
+    padding-bottom: 0;
+  }
+
+  .chat-composer-wrap {
+    position: sticky;
+    bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+    background: var(--chat-page);
+    z-index: 10;
   }
 
   .chat-main-header {
