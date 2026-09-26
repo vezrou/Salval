@@ -6,6 +6,15 @@ export default function ChatComposer({
   onChange,
   onSubmit,
 }) {
+  function handleKeyDown(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      if (value.trim() && !isSending) {
+        onSubmit(event);
+      }
+    }
+  }
+
   return (
     <>
       <form className="composer" onSubmit={onSubmit}>
@@ -14,6 +23,7 @@ export default function ChatComposer({
           disabled={isSending}
           maxLength={1000}
           onChange={(event) => onChange(event.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder="Message SALVAL..."
           rows={2}
           value={value}
