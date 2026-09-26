@@ -48,6 +48,7 @@ def generate(system_prompt: str, user_message: str, history: list[dict] | None =
         types.Content(role="user", parts=[types.Part(text=user_message)])
     ]
 
+    last_error = None
     for attempt in range(_MAX_RETRIES):
         try:
             response = client.models.generate_content(
@@ -57,9 +58,16 @@ def generate(system_prompt: str, user_message: str, history: list[dict] | None =
             )
             return response.text.strip()
         except ServerError as e:
-            if e.status_code == 503 and attempt < _MAX_RETRIES - 1:
+            last_error = e
+            # ServerError stores the HTTP code in .code, not .status_code
+            if getattr(e, 'code', None) == 503 and attempt < _MAX_RETRIES - 1:
                 time.sleep(_RETRY_DELAY * (attempt + 1))
                 continue
-            raise RuntimeError(
-                "Gemini is experiencing high demand right now. Please try again in a moment."
-            ) from e
+            break
+        except Exception as e:
+            last_error = e
+            break
+
+    raise RuntimeError(
+        "Gemini is experiencing high demand right now. Please try again in a moment."
+    ) from last_error
