@@ -1,5 +1,17 @@
 import { ArrowUpRight } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { STARTER_PROMPTS } from '../../data/chat.js';
+
+function CodeBlock({ className, children }) {
+  const language = /language-(\w+)/.exec(className || '')?.[1] ?? 'text';
+  return (
+    <SyntaxHighlighter style={oneDark} language={language} PreTag="div">
+      {String(children).replace(/\n$/, '')}
+    </SyntaxHighlighter>
+  );
+}
 
 function Message({ message }) {
   const { agent, content, role } = message;
@@ -13,7 +25,13 @@ function Message({ message }) {
         </p>
       )}
       <div className="message-copy">
-        <p>{content}</p>
+        {role === 'assistant' ? (
+          <ReactMarkdown components={{ code: CodeBlock }}>
+            {content}
+          </ReactMarkdown>
+        ) : (
+          <p>{content}</p>
+        )}
       </div>
     </article>
   );

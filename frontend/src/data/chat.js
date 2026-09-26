@@ -1,16 +1,16 @@
 export const AGENTS = [
-  { id: 'main', name: 'SALVAL', role: 'Main Agent' },
-  { id: 'debug', name: 'Salma', role: 'Debugger Agent' },
-  { id: 'ui', name: 'Valerie', role: 'UI/UX Agent' },
-  { id: 'code', name: 'Leo', role: 'Code Agent' },
-  { id: 'architect', name: 'Aria', role: 'Architect Agent' },
+  { id: 'main',      name: 'SALVAL',  role: 'Your AI dev team' },
+  { id: 'architect', name: 'Aria',    role: 'Architecture & structure' },
+  { id: 'code',      name: 'Leo',     role: 'Clean code & reviews' },
+  { id: 'debug',     name: 'Salma',   role: 'Debugging & fixes' },
+  { id: 'ui',        name: 'Valerie', role: 'UI/UX & front-end' },
 ];
 
 export const STARTER_PROMPTS = [
-  'Help me structure a new project',
-  'Help me understand this project',
-  'I am stuck on an error',
-  'Take a look at this interface',
+  'I want to build a project, help me structure it cleanly',
+  'Review my code and tell me what to improve',
+  'I have a bug I cannot fix',
+  'Help me improve my interface',
 ];
 
 export function getAgent(agentId) {
