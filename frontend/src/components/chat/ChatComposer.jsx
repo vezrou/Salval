@@ -5,6 +5,7 @@ export default function ChatComposer({
   isSending,
   onChange,
   onSubmit,
+  status,
 }) {
   function handleKeyDown(event) {
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -30,7 +31,11 @@ export default function ChatComposer({
         />
         <div className="composer-bottom">
           <span aria-live="polite">
-            {isSending ? 'Routing to an agent…' : 'Project context · demo'}
+            {status === 'waking'
+              ? '⏳ Waking up the server, hang tight…'
+              : isSending
+              ? 'Routing to an agent…'
+              : 'Project context · demo'}
           </span>
           <button
             type="submit"

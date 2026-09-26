@@ -1,12 +1,34 @@
 import { useState, useRef } from 'react';
 import { getAgent } from '../data/chat.js';
 
+const API = import.meta.env.VITE_API_URL ?? '';
+const WAKE_TIMEOUT_MS = 60_000; // 60s — enough for Render cold start
+
+/**
+ * Ping the backend and wait until it responds or the timeout is reached.
+ * Returns true if the server is up, false if it timed out.
+ */
+async function waitForServer() {
+  const deadline = Date.now() + WAKE_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    try {
+      const res = await fetch(`${API}/ping`, { method: 'GET' });
+      if (res.ok) return true;
+    } catch {
+      // still sleeping — wait 3s and try again
+    }
+    await new Promise((r) => setTimeout(r, 3000));
+  }
+  return false;
+}
+
 export default function useChat() {
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState('');
   const [activeAgent, setActiveAgent] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState('');
+  const [status, setStatus] = useState(''); // "waking" | ""
 
   // Persists the session_id returned by the backend so every follow-up
   // message in this conversation is sent with the same id.
@@ -16,66 +38,60 @@ export default function useChat() {
     event.preventDefault();
 
     const content = draft.trim();
-
-    if (!content || isSending) {
-      return;
-    }
+    if (!content || isSending) return;
 
     const id = Date.now().toString();
-    const userMessage = {
+    setMessages((current) => [...current, {
       id: `${id}-user`,
       role: 'user',
       content,
-    };
-
-    setMessages((current) => [...current, userMessage]);
+    }]);
     setDraft('');
     setError('');
-    setActiveAgent('SALVAL');
     setIsSending(true);
 
     try {
-      // Retry once — handles Render free-tier cold starts (50s spin-up)
-      let response;
-      for (let attempt = 0; attempt < 2; attempt++) {
-        response = await fetch(`${import.meta.env.VITE_API_URL ?? ''}/build`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            command: content,
-            code: '',
-            session_id: sessionIdRef.current,
-          }),
-        });
-        if (response.ok) break;
+      // Wake the server first — handles Render free-tier cold starts
+      setStatus('waking');
+      const isUp = await waitForServer();
+      setStatus('');
+
+      if (!isUp) {
+        setError('SALVAL is taking too long to wake up. Please try again in a moment.');
+        return;
       }
 
-      if (!response.ok) {
-        throw new Error('The chat request failed.');
-      }
+      setActiveAgent('SALVAL');
+      const response = await fetch(`${API}/build`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          command: content,
+          code: '',
+          session_id: sessionIdRef.current,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Request failed');
 
       const data = await response.json();
 
-      // Store the session_id returned by the server for subsequent messages
-      if (data.session_id) {
-        sessionIdRef.current = data.session_id;
-      }
+      if (data.session_id) sessionIdRef.current = data.session_id;
 
       const agent = getAgent(data.routed_to);
-      const assistantMessage = {
+      setMessages((current) => [...current, {
         id: `${id}-assistant`,
         role: 'assistant',
         content: data.result,
         agent,
-      };
-
-      setMessages((current) => [...current, assistantMessage]);
+      }]);
       setActiveAgent(agent.name);
     } catch {
-      setError('SALVAL is waking up — please send your message again in a few seconds.');
+      setError('SALVAL could not connect. Please try again.');
       setActiveAgent('SALVAL');
     } finally {
       setIsSending(false);
+      setStatus('');
     }
   }
 
@@ -87,5 +103,6 @@ export default function useChat() {
     messages,
     sendMessage,
     setDraft,
+    status,
   };
 }

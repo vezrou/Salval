@@ -17,6 +17,7 @@ export default function ChatPage() {
     messages,
     sendMessage,
     setDraft,
+    status,
   } = useChat();
   const conversationTitle = getConversationTitle(messages);
 
@@ -61,6 +62,7 @@ export default function ChatPage() {
             isSending={isSending}
             onChange={setDraft}
             onSubmit={sendMessage}
+            status={status}
           />
         </main>
       </div>
