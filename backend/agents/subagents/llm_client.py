@@ -15,7 +15,7 @@ from google.genai import types
 from google.genai.errors import ServerError
 
 _MODELS = [
-    "gemini-3.5-flash",
+    "gemini-2.0-flash-lite",   # lightest stable model, highest free-tier quota
     "gemini-2.5-flash-lite",   # fallback if primary is overloaded
 ]
 _MAX_RETRIES = 3
