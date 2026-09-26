@@ -68,6 +68,11 @@ def build(req: BuildRequest):
     return {**response, "session_id": sid}
 
 
+@app.get("/ping")
+def ping():
+    return {"status": "ok"}
+
+
 @app.post("/assist")
 def assist(req: CodeCheck):
     return check_code(req.code, req.language)
