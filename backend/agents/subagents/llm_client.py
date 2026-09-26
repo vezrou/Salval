@@ -12,7 +12,7 @@ import os
 import time
 from google import genai
 from google.genai import types
-from google.genai.errors import ServerError
+from google.genai.errors import ServerError, ClientError
 
 _MODELS = [
     "gemini-2.0-flash-lite",   # lightest, highest free-tier quota
@@ -63,16 +63,19 @@ def generate(system_prompt: str, user_message: str, history: list[dict] | None =
                     config=types.GenerateContentConfig(system_instruction=system_prompt),
                 )
                 return response.text.strip()
-            except ServerError as e:
+            except (ServerError, ClientError) as e:
                 last_error = e
-                is_503 = getattr(e, 'code', None) == 503 or '503' in str(e)
-                if is_503 and attempt < _MAX_RETRIES - 1:
+                code = getattr(e, 'code', None)
+                is_retryable = code in (429, 503) or any(
+                    str(c) in str(e) for c in (429, 503)
+                )
+                if is_retryable and attempt < _MAX_RETRIES - 1:
                     time.sleep(_RETRY_DELAY * (attempt + 1))
                     continue
-                break  # try next model
+                break  # move to next model
             except Exception as e:
                 last_error = e
-                break
+                break  # move to next model
 
     raise RuntimeError(
         "Gemini is experiencing high demand right now. Please try again in a moment."
