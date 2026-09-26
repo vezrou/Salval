@@ -72,7 +72,10 @@ export default function useChat() {
         }),
       });
 
-      if (!response.ok) throw new Error('Request failed');
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.detail ?? 'Request failed');
+      }
 
       const data = await response.json();
 
@@ -86,8 +89,8 @@ export default function useChat() {
         agent,
       }]);
       setActiveAgent(agent.name);
-    } catch {
-      setError('SALVAL could not connect. Please try again.');
+    } catch (err) {
+      setError(err?.message ?? 'SALVAL could not connect. Please try again.');
       setActiveAgent('SALVAL');
     } finally {
       setIsSending(false);

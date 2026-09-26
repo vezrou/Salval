@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import uuid
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -55,7 +55,10 @@ def build(req: BuildRequest):
     sid = req.session_id.strip() or str(uuid.uuid4())
     history = _sessions.get(sid, [])
 
-    response = main_agent(req.command, req.code, history)
+    try:
+        response = main_agent(req.command, req.code, history)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
 
     # Append this exchange to the session history (Gemini format)
     history.append({"role": "user",  "parts": [{"text": req.command}]})

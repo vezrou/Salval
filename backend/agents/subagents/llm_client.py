@@ -9,10 +9,14 @@ by load_dotenv() in main.py):
 """
 
 import os
+import time
 from google import genai
 from google.genai import types
+from google.genai.errors import ServerError
 
-_MODEL_ID = "gemini-3.8-flash"
+_MODEL_ID = "gemini-3.5-flash"
+_MAX_RETRIES = 3
+_RETRY_DELAY = 2  # seconds between retries on 503
 
 
 def generate(system_prompt: str, user_message: str, history: list[dict] | None = None) -> str:
@@ -20,8 +24,7 @@ def generate(system_prompt: str, user_message: str, history: list[dict] | None =
     Call Gemini with a system prompt, optional prior conversation history,
     and the latest user message. Returns the model's reply as plain text.
 
-    history entries must follow the shape:
-        {"role": "user" | "model", "parts": [{"text": "..."}]}
+    Retries up to _MAX_RETRIES times on 503 (Gemini overload) before giving up.
     """
     api_key = os.environ.get("GEMINI_API_KEY", "")
     if not api_key:
@@ -45,10 +48,18 @@ def generate(system_prompt: str, user_message: str, history: list[dict] | None =
         types.Content(role="user", parts=[types.Part(text=user_message)])
     ]
 
-    response = client.models.generate_content(
-        model=_MODEL_ID,
-        contents=contents,
-        config=types.GenerateContentConfig(system_instruction=system_prompt),
-    )
-
-    return response.text.strip()
+    for attempt in range(_MAX_RETRIES):
+        try:
+            response = client.models.generate_content(
+                model=_MODEL_ID,
+                contents=contents,
+                config=types.GenerateContentConfig(system_instruction=system_prompt),
+            )
+            return response.text.strip()
+        except ServerError as e:
+            if e.status_code == 503 and attempt < _MAX_RETRIES - 1:
+                time.sleep(_RETRY_DELAY * (attempt + 1))
+                continue
+            raise RuntimeError(
+                "Gemini is experiencing high demand right now. Please try again in a moment."
+            ) from e
