@@ -45,25 +45,31 @@ export default function ChatPage() {
         </aside>
 
         <main className="chat-page-main">
-          <header className="chat-title-block">
-            <h1>{conversationTitle}</h1>
-            <p className="chat-context-line">
-              A conversation with your project in context.
-            </p>
-          </header>
+          <div className="chat-main-header">
+            <header className="chat-title-block">
+              <h1>{conversationTitle}</h1>
+              <p className="chat-context-line">
+                A conversation with your project in context.
+              </p>
+            </header>
+          </div>
 
           <Conversation
             messages={messages}
             error={error}
+            isSending={isSending}
             onPromptSelect={setDraft}
           />
-          <ChatComposer
-            value={draft}
-            isSending={isSending}
-            onChange={setDraft}
-            onSubmit={sendMessage}
-            status={status}
-          />
+
+          <div className="chat-composer-wrap">
+            <ChatComposer
+              value={draft}
+              isSending={isSending}
+              onChange={setDraft}
+              onSubmit={sendMessage}
+              status={status}
+            />
+          </div>
         </main>
       </div>
     </div>

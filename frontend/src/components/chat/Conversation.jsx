@@ -66,7 +66,15 @@ function EmptyConversation({ error, onPromptSelect }) {
   );
 }
 
-export default function Conversation({ messages, error, onPromptSelect }) {
+function TypingIndicator() {
+  return (
+    <div className="message message-assistant typing-indicator" aria-label="Agent is thinking">
+      <span /><span /><span />
+    </div>
+  );
+}
+
+export default function Conversation({ messages, error, isSending, onPromptSelect }) {
   if (messages.length === 0) {
     return <EmptyConversation error={error} onPromptSelect={onPromptSelect} />;
   }
@@ -76,6 +84,7 @@ export default function Conversation({ messages, error, onPromptSelect }) {
       {messages.map((message) => (
         <Message key={message.id} message={message} />
       ))}
+      {isSending && <TypingIndicator />}
       {error && <p className="chat-error" role="alert">{error}</p>}
     </div>
   );
