@@ -15,11 +15,13 @@ from google.genai import types
 from google.genai.errors import ServerError
 
 _MODELS = [
-    "gemini-2.0-flash-lite",   # lightest stable model, highest free-tier quota
-    "gemini-2.5-flash-lite",   # fallback if primary is overloaded
+    "gemini-2.0-flash-lite",   # lightest, highest free-tier quota
+    "gemini-2.5-flash-lite",   # fallback 1
+    "gemini-2.0-flash",        # fallback 2
+    "gemini-1.5-flash-8b",     # fallback 3 — smallest/oldest, almost never rate-limited
 ]
-_MAX_RETRIES = 3
-_RETRY_DELAY = 2  # seconds between retries on 503
+_MAX_RETRIES = 2
+_RETRY_DELAY = 1  # seconds between retries on 503
 
 
 def generate(system_prompt: str, user_message: str, history: list[dict] | None = None) -> str:
