@@ -11,7 +11,9 @@
   --topbar-height: 68px;
 
   display: flex;
+  height: 100dvh;
   min-height: 100dvh;
+  overflow: hidden;
   flex-direction: column;
   color: var(--chat-text);
   background: var(--chat-page);
@@ -36,6 +38,7 @@
 }
 
 .chat-page-topbar {
+  flex-shrink: 0;
   height: var(--topbar-height);
   justify-content: space-between;
   padding-inline: 5.5%;
@@ -79,13 +82,16 @@
 
 .chat-layout {
   display: grid;
+  min-height: 0;
   height: calc(100dvh - var(--topbar-height));
   flex: 1;
   grid-template-columns: 250px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   overflow: hidden;
 }
 
 .chat-sidebar {
+  min-height: 0;
   padding: 34px 18px;
   border-right: 1px solid var(--chat-line);
   background: var(--chat-surface);
@@ -139,6 +145,15 @@
   margin-top: 42px;
 }
 
+.agent-tagline {
+  margin: 28px 12px 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--chat-line);
+  color: var(--chat-muted);
+  font-size: var(--type-caption);
+  line-height: 1.6;
+}
+
 .agent-list-item {
   display: grid;
   gap: 4px;
@@ -165,6 +180,8 @@
 /* Conversation */
 .chat-page-main {
   display: flex;
+  min-height: 0;
+  min-width: 0;
   width: min(760px, calc(100% - 48px));
   height: 100%;
   flex: 1;
@@ -208,6 +225,7 @@
 }
 
 .chat-thread {
+  min-height: 0;
   flex: 1;
   overflow-y: auto;
   padding: 0 4px 16px 0;
@@ -405,6 +423,8 @@
 @media (max-width: 700px) {
   .chat-page {
     --topbar-height: 60px;
+    height: auto;
+    overflow: visible;
   }
 
   .chat-page-topbar {
@@ -413,6 +433,8 @@
 
   .chat-layout {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    align-items: start;
     height: auto;
     min-height: calc(100dvh - var(--topbar-height));
     overflow: visible;
@@ -481,4 +503,45 @@
   .composer-bottom {
     font-size: var(--type-tiny);
   }
+}
+
+
+/* Repository context shares the composer's surfaces and colors. */
+.repository-panel {
+  flex-shrink: 0; max-height: 35vh; overflow-y: auto;
+  padding: 16px; margin-bottom: 20px;
+  border: 1px solid var(--chat-line); border-radius: 12px;
+  background: var(--chat-surface); font-size: var(--type-caption);
+}
+.repository-panel label, .repository-result summary {
+  display: flex; align-items: center; gap: 8px; color: var(--chat-heading);
+}
+.repository-input-row { display: flex; gap: 8px; margin-top: 12px; }
+.repository-input-row input {
+  min-width: 0; flex: 1; padding: 10px;
+  border: 1px solid var(--chat-line); border-radius: 6px;
+  background: var(--chat-page); color: var(--chat-text); font: inherit;
+}
+.repository-input-row button {
+  padding: 10px 14px; border: 0; border-radius: 6px;
+  background: var(--chat-accent); color: #183c39; font: inherit; cursor: pointer;
+}
+.repository-input-row button:disabled { opacity: .55; cursor: default; }
+.repository-panel :is(input, button, summary):focus-visible { outline: 2px solid var(--chat-accent); outline-offset: 3px; }
+.repository-panel p { margin: 10px 0 0; line-height: 1.5; }
+#repo-help, .repository-name { color: var(--chat-muted); font-size: var(--type-small); overflow-wrap: anywhere; }
+.repository-result { margin-top: 12px; }
+.repository-result summary { cursor: pointer; }
+.repository-result svg { flex-shrink: 0; color: var(--chat-accent); }
+.chat-title-block { margin-bottom: 20px; }
+@media (max-width: 700px) {
+  .repository-panel { max-height: none; }
+  .agent-section { margin-top: 16px; }
+}
+@media (max-width: 420px) {
+  .repository-input-row { flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .typing-indicator span { animation: none; }
+  .theme-toggle, .conversation-prompt { transition: none; }
 }

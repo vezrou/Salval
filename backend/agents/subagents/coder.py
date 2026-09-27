@@ -6,6 +6,10 @@ can read, understand, and maintain. No spaghetti allowed.
 """
 
 from .llm_client import generate
+from .project_context import with_context
+from .knowledge_loader import load as _load_knowledge
+
+_KNOWLEDGE = _load_knowledge("coding.md")
 
 _SYSTEM_PROMPT = """\
 You are Leo, a senior software engineer and code mentor for junior developers. \
@@ -33,12 +37,14 @@ When asked to REVIEW code you:
 5. Give it an honest readability score out of 10 with a one-line reason.
 
 Always specify the programming language at the start of every code block. \
-Be direct, practical, and encouraging. Junior devs need confidence, not shame.\
-"""
+Be direct, practical, and encouraging. Junior devs need confidence, not shame.
+
+--- KNOWLEDGE BASE ---
+""" + _KNOWLEDGE + "\n"
 
 
-def run(command: str, code: str = "", history: list[dict] | None = None) -> str:
+def run(command: str, code: str = "", history: list[dict] | None = None, context: dict | None = None) -> str:
     user_message = command
     if code.strip():
         user_message += f"\n\n```\n{code}\n```"
-    return generate(_SYSTEM_PROMPT, user_message, history or [])
+    return generate(_SYSTEM_PROMPT, with_context(user_message, context), history or [])

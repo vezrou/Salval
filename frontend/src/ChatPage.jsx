@@ -2,6 +2,7 @@ import { useState } from 'react';
 import AgentList from './components/chat/AgentList.jsx';
 import ChatComposer from './components/chat/ChatComposer.jsx';
 import Conversation from './components/chat/Conversation.jsx';
+import RepositoryPanel from './components/chat/RepositoryPanel.jsx';
 import ThemeToggle from './components/chat/ThemeToggle.jsx';
 import { getConversationTitle } from './data/chat.js';
 import useChat from './hooks/useChat.js';
@@ -17,7 +18,7 @@ export default function ChatPage() {
     messages,
     sendMessage,
     setDraft,
-    status,
+    status, repoUrl, setRepoUrl, project, repoError, analyzeRepository, isAnalyzing,
   } = useChat();
   const conversationTitle = getConversationTitle(messages);
 
@@ -49,10 +50,14 @@ export default function ChatPage() {
             <header className="chat-title-block">
               <h1>{conversationTitle}</h1>
               <p className="chat-context-line">
-                A conversation with your project in context.
+                Analyze → Reuse → Plan → Generate → Review → Improve
               </p>
             </header>
           </div>
+
+          <RepositoryPanel repoUrl={repoUrl} setRepoUrl={setRepoUrl} project={project}
+            repoError={repoError} busy={isSending || isAnalyzing} isAnalyzing={isAnalyzing}
+            status={status} onAnalyze={analyzeRepository} />
 
           <Conversation
             messages={messages}
@@ -64,10 +69,11 @@ export default function ChatPage() {
           <div className="chat-composer-wrap">
             <ChatComposer
               value={draft}
-              isSending={isSending}
+              isSending={isSending || isAnalyzing}
               onChange={setDraft}
               onSubmit={sendMessage}
               status={status}
+              hasContext={Boolean(project)}
             />
           </div>
         </main>

@@ -1,75 +1,62 @@
 """
-Thin wrapper around Google Gemini text generation.
+Thin wrapper around OpenAI text generation.
 
 Reads credentials from environment variables (or a .env file loaded
 by load_dotenv() in main.py):
 
-    GEMINI_API_KEY – Google AI Studio API key
-                     Get one free at https://aistudio.google.com/apikey
+    OPENAI_API_KEY – OpenAI API key
+                     Get one at https://platform.openai.com/api-keys
 """
 
 import os
 import time
-from google import genai
-from google.genai import types
-from google.genai.errors import ServerError, ClientError
+from openai import OpenAI, RateLimitError, APIStatusError
 
 _MODELS = [
-    "gemini-2.0-flash-lite",   # lightest, highest free-tier quota
-    "gemini-2.5-flash-lite",   # fallback 1
-    "gemini-2.0-flash",        # fallback 2
-    "gemini-1.5-flash-8b",     # fallback 3 — smallest/oldest, almost never rate-limited
+    "gpt-4o-mini",   # cheapest / highest quota
+    "gpt-4o",        # fallback 1
+    "gpt-3.5-turbo", # fallback 2 — oldest, almost never rate-limited
 ]
 _MAX_RETRIES = 2
-_RETRY_DELAY = 1  # seconds between retries on 503
+_RETRY_DELAY = 1  # seconds between retries on rate-limit / overload
 
 
 def generate(system_prompt: str, user_message: str, history: list[dict] | None = None) -> str:
     """
-    Call Gemini with a system prompt, optional prior conversation history,
+    Call OpenAI with a system prompt, optional prior conversation history,
     and the latest user message. Returns the model's reply as plain text.
 
-    Retries up to _MAX_RETRIES times on 503 (Gemini overload) before giving up.
+    History entries must follow the OpenAI format:
+        {"role": "user" | "assistant", "content": "..."}
+
+    Retries up to _MAX_RETRIES times on 429 / 503 before moving to the next
+    model in the fallback chain.
     """
-    api_key = os.environ.get("GEMINI_API_KEY", "")
+    api_key = os.environ.get("OPENAI_API_KEY", "")
     if not api_key:
-        raise EnvironmentError(
-            "GEMINI_API_KEY must be set before calling the subagents."
+        raise RuntimeError(
+            "OPENAI_API_KEY must be set before calling the subagents."
         )
 
-    client = genai.Client(api_key=api_key)
+    client = OpenAI(api_key=api_key, timeout=45, max_retries=0)
 
-    # Convert history to the SDK's Content objects
-    gemini_history = [
-        types.Content(
-            role=entry["role"],
-            parts=[types.Part(text=p["text"]) for p in entry["parts"]],
-        )
-        for entry in (history or [])
-    ]
-
-    # Build the full contents list: history + new user turn
-    contents = gemini_history + [
-        types.Content(role="user", parts=[types.Part(text=user_message)])
-    ]
+    messages = [{"role": "system", "content": system_prompt}]
+    messages.extend(history or [])
+    messages.append({"role": "user", "content": user_message})
 
     last_error = None
     for model in _MODELS:
         for attempt in range(_MAX_RETRIES):
             try:
-                response = client.models.generate_content(
+                response = client.chat.completions.create(
                     model=model,
-                    contents=contents,
-                    config=types.GenerateContentConfig(system_instruction=system_prompt),
+                    messages=messages,
                 )
-                return response.text.strip()
-            except (ServerError, ClientError) as e:
+                return response.choices[0].message.content.strip()
+            except (RateLimitError, APIStatusError) as e:
                 last_error = e
-                code = getattr(e, 'code', None)
-                is_retryable = code in (429, 503) or any(
-                    str(c) in str(e) for c in (429, 503)
-                )
-                if is_retryable and attempt < _MAX_RETRIES - 1:
+                status = getattr(e, "status_code", None)
+                if status in (429, 503) and attempt < _MAX_RETRIES - 1:
                     time.sleep(_RETRY_DELAY * (attempt + 1))
                     continue
                 break  # move to next model
@@ -78,5 +65,5 @@ def generate(system_prompt: str, user_message: str, history: list[dict] | None =
                 break  # move to next model
 
     raise RuntimeError(
-        "Gemini is experiencing high demand right now. Please try again in a moment."
+        "OpenAI is experiencing high demand right now. Please try again in a moment."
     ) from last_error

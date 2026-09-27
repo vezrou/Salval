@@ -1,53 +1,10 @@
-# SalVal Backend: API Contract
+# SALVAL API
 
-**Base URL (local):** `http://127.0.0.1:8000`
-**Live test page:**`http://127.0.0.1:8000/docs`
+Run from this directory with `python -m uvicorn main:app --reload` after installing `requirements.txt` and setting `OPENAI_API_KEY` in `.env`. Interactive API docs: http://127.0.0.1:8000/docs.
 
-## Run the backend
+- `GET /ping`: health response `{"status":"ok"}`.
+- `POST /analyze`: accepts `repo_url`, optional `token`, optional `session_id`. Returns `session_id`, `files_analyzed`, and a context snapshot with `stack`, `components`, `hooks`, `utilities`, `css_tokens`, `patterns`, `summary`, and sampled `files`. A successful scan resets history; failed analysis preserves existing context.
+- `POST /build`: accepts `command`, optional `code`, optional `session_id`. Returns `routed_to`, `agent_name`, `result`, and `session_id`. Pass the analysis session ID to use its context. Routes: `debug`, `ui`, `code`, `architect`, `frontend`. Unknown session IDs return 409 so lost context is not silently ignored.
+- `POST /assist`: accepts `code` and optional `language`; returns an `issues` array of `line`, `problem`, and `hint`.
 
-```bash
-pip install -r requirements.txt
-univcorn main:app --reload
-```
-## POST /build  (Section 1: "Build with the right agent")
-
-Request:
-```json
-{"command": "fix this error", "code": "print('hi'"}
-```
-
-Response:
-```json
-{"routed_to": "debug", "agent_name": "Salma", "result": "..."}
-```
-
-- `command`: what the developer wants (required)
-- `code`: the developer's code (optional, can be `""`)
-- `routed_to`: which subagent answered: `debug`, `ui`, or `code`
-- `agent_name`: the display name of the subagent that answered (e.g. "Salma", "Valeria", "Leo")
-- `result`: the subagent's answer, as text
-
-## POST /assist  (Section 2: "Understand the codebase")
-
-Request:
-```json
-{"code": "print('hi'", "language": "python"}
-```
-
-Response:
-```json
-{
-  "issues": [
-    {"line": 1, "problem": "...", "hint": "..."}
-  ]
-}
-```
-
-- `line`: line number where the AI icon should appear
-- `problem`: what is wrong
-- `hint`: what the developer should write to fix it
-
-## Notes
-
-- Field names must match exactly: `command`, `code`, `language`.
-- Currently the responses are placeholders. Real AI will be connected during the hackathon, but the format will stay the same.
+Only repository root URLs are supported, using the default branch. Analysis samples at most 60 eligible files / 180 KB of source. Sessions are process-local, so run one persistent worker for the demo. See the root README for limitations and tests.

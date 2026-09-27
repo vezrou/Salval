@@ -6,6 +6,7 @@ export default function ChatComposer({
   onChange,
   onSubmit,
   status,
+  hasContext,
 }) {
   function handleKeyDown(event) {
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -22,7 +23,7 @@ export default function ChatComposer({
         <textarea
           aria-label="Message SALVAL"
           disabled={isSending}
-          maxLength={1000}
+          maxLength={12000}
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Message SALVAL..."
@@ -33,9 +34,11 @@ export default function ChatComposer({
           <span aria-live="polite">
             {status === 'waking'
               ? '⏳ Waking up the server, hang tight…'
+              : status === 'scanning'
+              ? 'Scanning repository…'
               : isSending
               ? 'Routing to an agent…'
-              : 'Project context · demo'}
+              : hasContext ? 'Project context loaded' : 'General advice · add a repository for context'}
           </span>
           <button
             type="submit"

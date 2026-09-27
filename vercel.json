@@ -13,6 +13,20 @@
   },
   "rewrites": [
     {
+      "source": "/ping",
+      "destination": {
+        "type": "service",
+        "service": "backend"
+      }
+    },
+    {
+      "source": "/analyze",
+      "destination": {
+        "type": "service",
+        "service": "backend"
+      }
+    },
+    {
       "source": "/build",
       "destination": {
         "type": "service",

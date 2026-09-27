@@ -6,9 +6,12 @@ import uuid
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import httpx
 
 from agents.main_agent import main_agent
 from agents.assistant import check_code
+from agents.github_fetcher import fetch_repo
+from agents.subagents.analyzer import analyze
 
 app = FastAPI()
 
@@ -21,13 +24,19 @@ app.add_middleware(
 
 # ---------------------------------------------------------------------------
 # In-memory session store
-# Each session holds a list of Gemini-compatible history entries:
-#   {"role": "user" | "model", "parts": [{"text": "..."}]}
-# Sessions are kept for the lifetime of the server process. For persistence
-# across restarts, swap this dict for a Redis or database store.
+# Each session holds:
+#   "history" — list of OpenAI-compatible message dicts
+#   "context" — project context snapshot extracted by the analyzer (or None)
+# Sessions are kept for the lifetime of the server process.
 # ---------------------------------------------------------------------------
-_sessions: dict[str, list[dict]] = {}
+_sessions: dict[str, dict] = {}
 _MAX_HISTORY = 20  # keep last 20 turns (10 exchanges) to stay within token limits
+
+
+def _get_session(sid: str) -> dict:
+    if sid not in _sessions:
+        _sessions[sid] = {"history": [], "context": None}
+    return _sessions[sid]
 
 
 # ---------------------------------------------------------------------------
@@ -40,6 +49,12 @@ class BuildRequest(BaseModel):
     session_id: str = ""   # optional; server creates one if blank
 
 
+class AnalyzeRequest(BaseModel):
+    repo_url: str
+    token: str = ""        # optional GitHub personal access token
+    session_id: str = ""   # optional; server creates one if blank
+
+
 class CodeCheck(BaseModel):
     code: str
     language: str = "python"
@@ -49,23 +64,68 @@ class CodeCheck(BaseModel):
 # Endpoints
 # ---------------------------------------------------------------------------
 
+@app.post("/analyze")
+def analyze_repo(req: AnalyzeRequest):
+    """
+    Fetch a GitHub repo, analyze its frontend files, and store the resulting
+    project context snapshot in the session for all subsequent /build calls.
+    """
+    sid = req.session_id.strip() or str(uuid.uuid4())
+    try:
+        files = fetch_repo(req.repo_url, token=req.token)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except httpx.HTTPStatusError as e:
+        status_code = e.response.status_code
+        if status_code == 404:
+            raise HTTPException(status_code=404, detail="Repository not found. Check the URL and make sure it is public.")
+        if status_code == 401:
+            raise HTTPException(status_code=401, detail="Repository is private. Provide a GitHub personal access token.")
+        raise HTTPException(status_code=502, detail=f"GitHub API error: {e}")
+    except httpx.RequestError:
+        raise HTTPException(status_code=502, detail="GitHub could not be reached. Please retry.")
+    except RuntimeError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    try:
+        context = analyze(files)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+    session = _get_session(sid)
+    # Keep the actual sampled source for reviews, not just its generated summary.
+    # The API response below stays small; source is retained only server-side.
+    session["context"] = {**context, "source_files": files}
+    session["history"] = []
+
+    return {
+        "session_id": sid,
+        "files_analyzed": len(files),
+        "context": context,
+    }
+
+
 @app.post("/build")
 def build(req: BuildRequest):
     # Resolve or create a session
     sid = req.session_id.strip() or str(uuid.uuid4())
-    history = _sessions.get(sid, [])
+    if req.session_id and sid not in _sessions:
+        raise HTTPException(status_code=409, detail="Your session expired. Analyze the repository again or start a new chat.")
+    session = _get_session(sid)
+    history = session["history"]
+    context = session["context"]
 
     try:
-        response = main_agent(req.command, req.code, history)
+        response = main_agent(req.command, req.code, history, context)
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
 
-    # Append this exchange to the session history (Gemini format)
-    history.append({"role": "user",  "parts": [{"text": req.command}]})
-    history.append({"role": "model", "parts": [{"text": response["result"]}]})
+    # Append this exchange to the session history (OpenAI format)
+    history.append({"role": "user",      "content": req.command})
+    history.append({"role": "assistant", "content": response["result"]})
 
     # Trim to keep only the most recent _MAX_HISTORY entries
-    _sessions[sid] = history[-_MAX_HISTORY:]
+    session["history"] = history[-_MAX_HISTORY:]
 
     return {**response, "session_id": sid}
 

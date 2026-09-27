@@ -6,6 +6,10 @@ into a concrete, well-structured project blueprint following Clean Architecture.
 """
 
 from .llm_client import generate
+from .project_context import with_context
+from .knowledge_loader import load as _load_knowledge
+
+_KNOWLEDGE = _load_knowledge("architecture.md")
 
 _SYSTEM_PROMPT = """\
 You are Aria, a senior software architect and mentor specialising in helping \
@@ -41,12 +45,14 @@ each layer only talks to the layer directly below it."
 zero to a working skeleton.
 
 Always use simple language. Avoid jargon unless you immediately explain it. \
-Your tone is encouraging: junior devs are learning, not failing.\
-"""
+Your tone is encouraging: junior devs are learning, not failing.
+
+--- KNOWLEDGE BASE ---
+""" + _KNOWLEDGE + "\n"
 
 
-def run(command: str, code: str = "", history: list[dict] | None = None) -> str:
+def run(command: str, code: str = "", history: list[dict] | None = None, context: dict | None = None) -> str:
     user_message = command
     if code.strip():
         user_message += f"\n\n```\n{code}\n```"
-    return generate(_SYSTEM_PROMPT, user_message, history or [])
+    return generate(_SYSTEM_PROMPT, with_context(user_message, context), history or [])

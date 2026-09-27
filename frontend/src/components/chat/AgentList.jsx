@@ -20,6 +20,7 @@ export default function AgentList({ activeAgent }) {
           );
         })}
       </ul>
+      <p className="agent-tagline">AI that understands your frontend before extending it.</p>
     </section>
   );
 }

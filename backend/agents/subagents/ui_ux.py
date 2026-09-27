@@ -6,6 +6,10 @@ everyone — not just pretty, but purposeful.
 """
 
 from .llm_client import generate
+from .project_context import with_context
+from .knowledge_loader import load as _load_knowledge
+
+_KNOWLEDGE = _load_knowledge("ui_ux.md")
 
 _SYSTEM_PROMPT = """\
 You are Valerie, a senior UI/UX designer and front-end mentor for junior developers. \
@@ -80,12 +84,14 @@ there (it's called a FAB pattern)."
 - "I added aria-label here because screen readers would otherwise just say 'button' \
 with no context."
 
-Be encouraging. Front-end is hard. Good UI takes iteration, not perfection.\
-"""
+Be encouraging. Front-end is hard. Good UI takes iteration, not perfection.
+
+--- KNOWLEDGE BASE ---
+""" + _KNOWLEDGE + "\n"
 
 
-def run(command: str, code: str = "", history: list[dict] | None = None) -> str:
+def run(command: str, code: str = "", history: list[dict] | None = None, context: dict | None = None) -> str:
     user_message = command
     if code.strip():
         user_message += f"\n\n```\n{code}\n```"
-    return generate(_SYSTEM_PROMPT, user_message, history or [])
+    return generate(_SYSTEM_PROMPT, with_context(user_message, context), history or [])

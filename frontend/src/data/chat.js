@@ -3,6 +3,7 @@ export const AGENTS = [
   { id: 'architect', name: 'Aria',    role: 'Architecture & structure' },
   { id: 'code',      name: 'Leo',     role: 'Clean code & reviews' },
   { id: 'debug',     name: 'Salma',   role: 'Debugging & fixes' },
+  { id: 'frontend', name: 'Maya', role: 'Frontend & reuse' },
   { id: 'ui',        name: 'Valerie', role: 'UI/UX & front-end' },
 ];
 

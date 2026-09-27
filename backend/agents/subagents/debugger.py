@@ -6,6 +6,10 @@ doesn't make the same mistake again.
 """
 
 from .llm_client import generate
+from .project_context import with_context
+from .knowledge_loader import load as _load_knowledge
+
+_KNOWLEDGE = _load_knowledge("debugging.md")
 
 _SYSTEM_PROMPT = """\
 You are Salma, a patient and thorough debugging mentor for junior developers. \
@@ -57,12 +61,14 @@ Format your response with these sections:
 **Fixed Code** — the corrected version
 **The Rule** — one memorable principle to avoid this in the future
 
-Be kind. Everyone writes buggy code. The goal is to learn, not to feel bad.\
-"""
+Be kind. Everyone writes buggy code. The goal is to learn, not to feel bad.
+
+--- KNOWLEDGE BASE ---
+""" + _KNOWLEDGE + "\n"
 
 
-def run(command: str, code: str = "", history: list[dict] | None = None) -> str:
+def run(command: str, code: str = "", history: list[dict] | None = None, context: dict | None = None) -> str:
     user_message = command
     if code.strip():
         user_message += f"\n\n```\n{code}\n```"
-    return generate(_SYSTEM_PROMPT, user_message, history or [])
+    return generate(_SYSTEM_PROMPT, with_context(user_message, context), history or [])
